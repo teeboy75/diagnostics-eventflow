@@ -34,7 +34,7 @@ namespace Microsoft.Diagnostics.EventFlow.Inputs
         private EventFlowSubject<EventData> subject;
         private Log4netConfiguration _log4NetInputConfiguration;
         private Hierarchy eventFlowRepo;
-
+       
         public Log4netInput(IConfiguration configuration, IHealthReporter healthReporter)
         {
             Requires.NotNull(healthReporter, nameof(healthReporter));
@@ -84,7 +84,7 @@ namespace Microsoft.Diagnostics.EventFlow.Inputs
                 eventFlowRepo = (Hierarchy) LogManager.GetRepository("EventFlowRepo");
             }
         }
-
+        
         protected override void Append(LoggingEvent loggingEvent)
         {
             if (loggingEvent == null || !IsEnabledFor(loggingEvent.Level))
@@ -106,14 +106,14 @@ namespace Microsoft.Diagnostics.EventFlow.Inputs
                 Timestamp = loggingEvent.TimeStamp,
                 Level = ToLogLevel[loggingEvent.Level],
                 Keywords = 0,
-                Payload = { { "Message", loggingEvent.MessageObject } }
+                Payload = { { "Message", $"{AttachGlobalContextProps()} {AttachThreadContextProps()} {AttachLogicalThreadContextProps()} {loggingEvent.MessageObject}" } }
             };
-
+         
             if (loggingEvent.ExceptionObject != null)
             {
                 eventData.Payload.Add("Exception", loggingEvent.ExceptionObject);
             }
-
+            
             foreach (var key in loggingEvent.Properties.GetKeys())
             {
                 try
@@ -127,6 +127,27 @@ namespace Microsoft.Diagnostics.EventFlow.Inputs
             }
 
             return eventData;
+        }
+
+        private string AttachGlobalContextProps()
+        {            
+            return $"[{log4net.GlobalContext.Properties[this._log4NetInputConfiguration.GlobalContextName ?? "GlobalContext"]?.ToString()}]";
+        }
+
+        private string AttachThreadContextProps()
+        {
+            string result = null;
+            var keys = log4net.ThreadContext.Properties.GetKeys();
+            foreach (var item in keys)
+            {
+                result += $"[{log4net.ThreadContext.Properties[item]}]";
+            }
+            return result;
+        }
+
+        private string AttachLogicalThreadContextProps()
+        {                 
+            return $"[{log4net.LogicalThreadContext.Properties[this._log4NetInputConfiguration.LogicalThreadContextName ?? "LogicalThreadContext"]?.ToString()}]";
         }
 
         /// <inheritdoc/>

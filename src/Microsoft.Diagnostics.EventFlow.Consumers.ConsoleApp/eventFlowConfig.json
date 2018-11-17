@@ -20,6 +20,12 @@
       ]
     },
     {
+      "type": "Log4net",
+      "logLevel": "Debug",
+      "globalContextName": "GlobalContext",
+      "logicalThreadContextName": "LogicalThreadContext"
+    },
+    {
       "type": "PerformanceCounter",
       "counters": [
         {

@@ -14,5 +14,9 @@ namespace Microsoft.Diagnostics.EventFlow.Configuration
         public string LogLevel { get; set; }
 
         public Level Log4netLevel { get; set; }
+
+        public string GlobalContextName { get; set; }
+
+        public string LogicalThreadContextName { get; set; }
     }
 }

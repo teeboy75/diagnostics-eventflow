@@ -613,18 +613,21 @@ namespace AspNetCoreEventFlow
 This input enables capturing diagnostic data sent to the [Log4net project](https://logging.apache.org/log4net/).
 
 *Configuration example*
-The Log4net input has one configuration, the Log4net Level:
+The Log4net input has one required configuration, the Log4net Level and 2 optional configurations: globalContextName and logicalThreadContextName
 ```json
 {
   "type": "Log4net",
-  "logLevel": "Debug"
+  "logLevel": "Debug",
+  "globalContextName": "MyGlobalContext",
+  "logicalThreadContextName": "MyLogicalThreadContext"
 }
 ```
 | Field | Values/Types | Required | Description |
 | :---- | :-------------- | :------: | :---------- |
 | `type` | "Log4net" | Yes | Specifies the output type. For this output, it must be "Log4net". |
 | `logLevel` | "Debug", "Info", "Warn", "Error", or "Fatal" | Yes | Specifies minimum [Log4net Level](https://logging.apache.org/log4net/log4net-1.2.11/release/sdk/log4net.Core.Level.html) for captured events. For example, if the level is `Warn`, the input will capture events with levels equal to `Warn`, `Error`, or `Fatal`. |
-
+| `globalContextName` | "<User Defined>" | No | Allows clients to supply custom properties on the global context. These will be tagged to every message |
+| `logicalThreadContextName` | "<User Defined>" | No | Allows clients to supply custom properties at the logical thread context. These will be tagged to every message |
 
 *Example: instantiating a Log4net logger that uses EventFlow Log4net input*
 
@@ -649,7 +652,45 @@ namespace ConsoleApp2
     }
 }
 ```
+*Example: instantiating a Log4net logger that uses EventFlow Log4net input with NDC thread and global contexts*
 
+```csharp
+using System;
+using Microsoft.Diagnostics.EventFlow;
+using log4net;
+
+namespace ConsoleApp2
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            using (DiagnosticPipeline pipeline = DiagnosticPipelineFactory.CreatePipeline(".\\eventFlowConfig.json"))
+            {
+                #region log4net input with stacks and global context
+                var logger = LogManager.GetLogger("EventFlowRepo", "MY_LOGGER_NAME");
+                GlobalContext.Properties["GlobalContext"] = "My Global Context";
+
+                using (ThreadContext.Stacks["NDC"].Push("Thread Context-1"))
+                {
+                    using (ThreadContext.Stacks["NDC"].Push("Thread Context-1-1"))
+                    {
+                        using (LogicalThreadContext.Stacks["LogicalThreadContext"].Push("Logical Thread Context-1-1-1"))
+                        {
+                            logger.Debug("Hey! Listen!", new Exception("uhoh"));
+                        }
+                        logger.Info("From Thread Context 1-1");
+                    }
+                    logger.Info("From Thread Context 1");
+                }
+                #endregion
+
+                Console.ReadLine();               
+            }
+        }
+    }
+}
+```
 #### NLog
 
 *Nuget package:* [**Microsoft.Diagnostics.EventFlow.Inputs.NLog**](https://www.nuget.org/packages/Microsoft.Diagnostics.EventFlow.Inputs.NLog/)
