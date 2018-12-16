@@ -130,14 +130,19 @@ namespace Microsoft.Diagnostics.EventFlow.Inputs
         }
 
         private string AttachGlobalContextProps()
-        {            
-            return $"[{log4net.GlobalContext.Properties[this._log4NetInputConfiguration.GlobalContextName ?? "GlobalContext"]?.ToString()}]";
+        {
+            var globalContextName = this._log4NetInputConfiguration.GlobalContextName ?? "GlobalContext";
+            if (log4net.GlobalContext.Properties[globalContextName] == null)
+                return null;
+            return $"[{log4net.GlobalContext.Properties[globalContextName]?.ToString()}]";
         }
 
         private string AttachThreadContextProps()
         {
             string result = null;
             var keys = log4net.ThreadContext.Properties.GetKeys();
+            if (keys == null)
+                return result;
             foreach (var item in keys)
             {
                 result += $"[{log4net.ThreadContext.Properties[item]}]";
@@ -146,8 +151,11 @@ namespace Microsoft.Diagnostics.EventFlow.Inputs
         }
 
         private string AttachLogicalThreadContextProps()
-        {                 
-            return $"[{log4net.LogicalThreadContext.Properties[this._log4NetInputConfiguration.LogicalThreadContextName ?? "LogicalThreadContext"]?.ToString()}]";
+        {
+            var logicalThreadContextName = this._log4NetInputConfiguration.LogicalThreadContextName ?? "LogicalThreadContext";
+            if (log4net.GlobalContext.Properties[logicalThreadContextName] == null)
+                return null;
+            return $"[{log4net.LogicalThreadContext.Properties[logicalThreadContextName]?.ToString()}]";
         }
 
         /// <inheritdoc/>

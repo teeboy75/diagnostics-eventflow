@@ -204,3 +204,4 @@ project.lock.json
 *.ide
 *.ide-journal
 
+/src/Microsoft.Diagnostics.EventFlow.FilterParserGenerator/FilterParser.peg.txt

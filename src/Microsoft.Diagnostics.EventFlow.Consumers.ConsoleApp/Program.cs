@@ -15,8 +15,12 @@ namespace Microsoft.Diagnostics.EventFlow.Consumers.ConsoleApp
         {
             using (DiagnosticPipeline pipeline = DiagnosticPipelineFactory.CreatePipeline(".\\eventFlowConfig.json"))
             {
-                #region log4net input with stacks and global context
                 var logger = LogManager.GetLogger("EventFlowRepo", "MY_LOGGER_NAME");
+                #region log4net without context params
+                logger.Debug("Hey! Listen!", new Exception("uhoh"));
+                #endregion
+                Console.ReadKey(true);
+                #region log4net input with stacks and global context                
                 GlobalContext.Properties["GlobalContext"] = "My Global Context";
 
                 using (ThreadContext.Stacks["NDC"].Push("Thread Context-1"))
